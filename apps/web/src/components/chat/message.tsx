@@ -1,6 +1,7 @@
 "use client";
 
 import { Message as MessageType } from "ai/react";
+import { useMemo } from "react";
 
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Badge } from "../ui/badge";
@@ -10,26 +11,31 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { Markdown } from "./markdown";
 
-export function Message(message: MessageType) {
-  const [metadata, msg] =
-    message.role === "user"
-      ? ["[]", message.content]
-      : message.content.split("-==-");
-  const sources = JSON.parse(metadata || "[]") as string[];
+export function Message({ message: messageObj }: { message: MessageType }) {
+  const [sources, msg] = useMemo(() => {
+    const [metadata, msg] =
+      messageObj.role === "user"
+        ? ["[]", messageObj.content]
+        : messageObj.content.split("-==-");
+    const sourceArray = JSON.parse(metadata || "[]") as string[];
+
+    return [sourceArray, msg];
+  }, [messageObj]);
 
   return (
     <TooltipProvider>
-      <div className="flex space-x-2" key={message.id}>
+      <div className="flex space-x-2" key={messageObj.id}>
         <Avatar>
-          {message.role !== "user" ? (
+          {messageObj.role !== "user" ? (
             <AvatarFallback className="bg-primary	text-black">AI</AvatarFallback>
           ) : (
             <AvatarFallback>U</AvatarFallback>
           )}
         </Avatar>
         <div className="p-2 bg-zinc-800 rounded-lg">
-          <p className="leading-relaxed text-sm p-1">{msg}</p>
+          <Markdown message={msg} />
 
           {sources.length > 0 && (
             <div className="flex gap-2 mt-2 max-w-xs overflow-auto p-1">
