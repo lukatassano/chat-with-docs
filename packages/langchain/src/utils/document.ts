@@ -4,8 +4,10 @@ import { formatDocumentsAsString } from "langchain/util/document";
 import { QdrantVectorStore } from "langchain/vectorstores/qdrant";
 
 export function getSources(docs: Document<Record<string, any>>[]) {
+  const uniqueDocs = removeDuplicateDocuments(docs);
+
   return (
-    docs?.map((doc: any) => {
+    uniqueDocs?.map((doc: any) => {
       return {
         id: doc.metadata.id,
         title: doc.metadata.title,
@@ -26,6 +28,19 @@ export async function getContext(
 
   const docs = await retriever.getRelevantDocuments(question);
   const serialized = formatDocumentsAsString(docs);
-
   return { docs, serialized };
+}
+
+function removeDuplicateDocuments(
+  docs: Document<Record<string, any>>[],
+): Document<Record<string, any>>[] {
+  const uniqueDocsMap = new Map<string, Document<Record<string, any>>>();
+  docs.forEach((doc: any) => {
+    if (!uniqueDocsMap.has(doc.id)) {
+      uniqueDocsMap.set(doc.id, doc);
+    }
+  });
+
+  const uniqueDocsArray = Array.from(uniqueDocsMap.values());
+  return uniqueDocsArray;
 }
